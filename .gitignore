@@ -23,3 +23,6 @@ test_app.py
 # Operating System files
 .DS_Store
 thumbs.db
+
+# Log files
+logs/*.log*

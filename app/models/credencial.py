@@ -3,7 +3,7 @@ from app.utils.encrypted_type import EncryptedType # Importamos nuestro nuevo ti
 
 class Credencial(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    nombre_doctor = db.Column(db.String(128), unique=True, nullable=False) # Keep for now
+    nombre_doctor = db.Column(db.String(128), unique=True, nullable=True) # Keep for now
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False) # Added
 
     # Usamos EncryptedType para las columnas sensibles

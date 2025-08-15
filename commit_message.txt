@@ -1,0 +1,12 @@
+feat: Configure Docker Compose for PostgreSQL development environment
+
+This commit introduces a Docker Compose setup to facilitate local development with PostgreSQL, aligning with production database recommendations.
+
+Key changes include:
+- Added `docker-compose.yml` to define `db` (PostgreSQL) and `web` (Flask app) services.
+- Configured `web` service to connect to PostgreSQL and increased memory limit to 1GB.
+- Modified `Dockerfile` to explicitly install `Flask-Login` and include `pip check` for better dependency management and debugging.
+- Refactored `app/calendar_api/__init__.py` and `app/__init__.py` to use a more robust blueprint registration pattern, resolving import errors and ensuring proper application startup.
+- Ensured `logs/` directory is tracked for container logs.
+
+These changes enable a more consistent and reliable development environment, paving the way for further development and testing against a production-like database.
