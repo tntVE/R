@@ -3,6 +3,8 @@ from flask_login import login_required, current_user
 from app.services import gcalendar_service
 import datetime
 import pytz
+from marshmallow import ValidationError # Added
+from app.schemas import AppointmentSchema # Added
 
 bp = Blueprint('calendar_api', __name__)
 
@@ -31,26 +33,25 @@ def get_free_busy():
 @bp.route('/book_appointment', methods=['POST'])
 @login_required
 def book_appointment():
-    data = request.get_json()
-    if not data:
-        return jsonify({"error": "Se requiere JSON con los datos de la cita."}), 400
+    schema = AppointmentSchema() # Added
+    try:
+        validated_data = schema.load(request.get_json()) # Added validation
+    except ValidationError as err: # Added
+        return jsonify({"errors": err.messages}), 400 # Added
 
-    summary = data.get('summary')
-    description = data.get('description', '')
-    start_time_str = data.get('start_time')
-    end_time_str = data.get('end_time')
-    attendees = data.get('attendees', [])
-    calendar_id = data.get('calendar_id', 'primary')
-
-    if not all([summary, start_time_str, end_time_str]):
-        return jsonify({"error": "Faltan campos requeridos: summary, start_time, end_time."}), 400
+    summary = validated_data['summary'] # Modified
+    description = validated_data.get('description', '') # Modified
+    start_time_str = validated_data['start_time'] # Modified
+    end_time_str = validated_data['end_time'] # Modified
+    attendees = validated_data.get('attendees', []) # Modified
+    calendar_id = validated_data.get('calendar_id', 'primary') # Modified
 
     try:
         # Convertir strings a objetos datetime con zona horaria
         # Asumimos que los strings vienen en formato ISO 8601 y en la zona horaria de Santiago
         timezone = pytz.timezone(current_user.timezone) # Modified
-        start_time = datetime.datetime.fromisoformat(start_time_str).astimezone(timezone)
-        end_time = datetime.datetime.fromisoformat(end_time_str).astimezone(timezone)
+        start_time = start_time_str.astimezone(timezone) # Modified (Marshmallow already converted to datetime)
+        end_time = end_time_str.astimezone(timezone) # Modified (Marshmallow already converted to datetime)
     except ValueError:
         return jsonify({"error": "Formato de fecha/hora inválido. Use ISO 8601."}), 400
 

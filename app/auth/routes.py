@@ -10,6 +10,8 @@ from app.services import gcalendar_service
 import datetime
 import pytz
 from flask_login import login_user, logout_user, current_user, login_required # Added
+from marshmallow import ValidationError # Added
+from app.schemas import UserRegistrationSchema, UserLoginSchema # Added
 
 # Helper function to build Google Flow
 def _build_google_flow(state=None):
@@ -83,10 +85,20 @@ def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.index')) # Assuming a main index route later
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
-        role = request.form.get('role', 'doctor') # Default role
-        timezone = request.form.get('timezone', 'UTC') # Default timezone
+        schema = UserRegistrationSchema() # Added
+        try:
+            # Use request.form for web forms, request.json for API
+            # For simplicity, assuming request.form for now as per HTML forms
+            # If it's an API, use request.json
+            data = request.form.to_dict() # Convert ImmutableMultiDict to dict
+            validated_data = schema.load(data) # Added validation
+        except ValidationError as err: # Added
+            return jsonify({"errors": err.messages}), 400 # Added
+
+        email = validated_data['email'] # Modified
+        password = validated_data['password'] # Modified
+        role = validated_data.get('role', 'doctor') # Modified
+        timezone = validated_data.get('timezone', 'UTC') # Modified
 
         user = User.query.filter_by(email=email).first()
         if user is None:
@@ -115,8 +127,15 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.index')) # Assuming a main index route later
     if request.method == 'POST':
-        email = request.form.get('email')
-        password = request.form.get('password')
+        schema = UserLoginSchema() # Added
+        try:
+            data = request.form.to_dict() # Convert ImmutableMultiDict to dict
+            validated_data = schema.load(data) # Added validation
+        except ValidationError as err: # Added
+            return jsonify({"errors": err.messages}), 400 # Added
+
+        email = validated_data['email'] # Modified
+        password = validated_data['password'] # Modified
         user = User.query.filter_by(email=email).first()
         if user is None or not user.check_password(password):
             flash('Email o contraseña inválidos.')
