@@ -47,6 +47,6 @@ ENV FLASK_APP=run.py
 
 # ---- INICIO DE CAMBIOS: Gunicorn ----
 # El comando para correr la aplicación cuando se inicie el contenedor
-# Ahora pasamos OAUTHLIB_INSECURE_TRANSPORT directamente a Gunicorn
-CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "120", "-e", "OAUTHLIB_INSECURE_TRANSPORT=1", "run:app"]
+# AHORA SIN OAUTHLIB_INSECURE_TRANSPORT
+CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "120", "run:app"]
 # ---- FIN DE CAMBIOS: Gunicorn ----
