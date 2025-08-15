@@ -41,6 +41,16 @@ def create_app(config_class=Config):
     from app.calendar_api import bp as calendar_api_bp # Added
     app.register_blueprint(calendar_api_bp, url_prefix='/api/calendar') # Added
 
+    # Manejadores de errores personalizados
+    @app.errorhandler(404)
+    def not_found_error(error):
+        return "<h1>404 Not Found</h1><p>The requested URL was not found on the server. If you entered the URL manually please check your spelling and try again.</p>", 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return "<h1>500 Internal Server Error</h1><p>The server encountered an internal error and was unable to complete your request. Either the server is overloaded or there is an error in the application.</p>", 500
+
     return app
 
 from app.models import paciente, cita, credencial, user

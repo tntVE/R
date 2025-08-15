@@ -5,8 +5,8 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY')
 
     # CRÍTICO: DATABASE_URL debe venir del entorno.
-    # Para desarrollo, puedes usar una variable de entorno como DATABASE_URL=sqlite:///app.db
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    # Para desarrollo, se espera una URL de PostgreSQL, por ejemplo: postgresql://user:password@host:port/database
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://user:password@localhost:5432/app_db' # Valor por defecto para desarrollo si no se especifica
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     # CRÍTICO: El nombre del archivo de credenciales de Google debe venir del entorno.

@@ -13,7 +13,10 @@ RUN groupadd -r appuser -g ${GID} && useradd -r -g appuser -u ${UID} appuser
 # Copiamos el archivo de requerimientos primero para aprovechar el cache de Docker
 COPY requirements.txt requirements.txt
 
-# Instalamos las dependencias
+# Instalar dependencias del sistema necesarias para psycopg2-binary (PostgreSQL)
+RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
+
+# Instalamos las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copiamos el resto del código de la aplicación al directorio de trabajo
@@ -44,5 +47,5 @@ ENV FLASK_APP=run.py
 # ---- INICIO DE CAMBIOS: Gunicorn ----
 # El comando para correr la aplicación cuando se inicie el contenedor
 # AHORA SIN OAUTHLIB_INSECURE_TRANSPORT
-CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "120", "run:app"]
+CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:5000", "--timeout", "120", "--workers", "5", "--log-level", "info", "--access-logfile", "-", "--error-logfile", "-", "run:app"]
 # ---- FIN DE CAMBIOS: Gunicorn ----
