@@ -20,6 +20,8 @@ def create_app(config_class=Config):
     # Registrar Blueprints
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
+    from app.calendar_api import bp as calendar_api_bp # Added
+    app.register_blueprint(calendar_api_bp, url_prefix='/api/calendar') # Added
 
     return app
 
