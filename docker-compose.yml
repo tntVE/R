@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13-alpine
+    restart: always
+    environment:
+      POSTGRES_DB: app_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432" # Expose PostgreSQL port for local access if needed
+
+  web:
+    build: .
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      # This DATABASE_URL will be used by Flask-SQLAlchemy
+      DATABASE_URL: postgresql://user:password@db:5432/app_db
+      # Other environment variables from config.py should also be set here or in a .env file
+      SECRET_KEY: your_secret_key_here # IMPORTANT: Change this in production
+      ENCRYPTION_KEY: your_encryption_key_here # IMPORTANT: Change this in production
+      GOOGLE_CLIENT_ID: your_google_client_id_here # IMPORTANT: Change this in production
+      GOOGLE_CLIENT_SECRET: your_google_client_secret_here # IMPORTANT: Change this in production
+    depends_on:
+      - db
+    mem_limit: 1g
+    volumes:
+      - .:/app # Mount current directory to /app in container for live code changes
+
+volumes:
+  db_data:

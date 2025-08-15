@@ -16,6 +16,10 @@ COPY requirements.txt requirements.txt
 # Instalar dependencias del sistema necesarias para psycopg2-binary (PostgreSQL)
 RUN apt-get update && apt-get install -y --no-install-recommends libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
+# FORZAR INSTALACIÓN DE FLASK-LOGIN Y VERIFICAR
+RUN pip install --no-cache-dir Flask-Login
+RUN pip check
+
 # Instalamos las dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
 

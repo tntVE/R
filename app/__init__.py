@@ -38,8 +38,8 @@ def create_app(config_class=Config):
     # Registrar Blueprints
     from app.auth import bp as auth_bp
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    from app.calendar_api import bp as calendar_api_bp # Added
-    app.register_blueprint(calendar_api_bp, url_prefix='/api/calendar') # Added
+    from app.calendar_api import register_blueprint as register_calendar_api_blueprint # Added
+    register_calendar_api_blueprint(app) # Added # Added
 
     # Manejadores de errores personalizados
     @app.errorhandler(404)
