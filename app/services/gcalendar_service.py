@@ -24,39 +24,8 @@ def build_gcal_service(user_id): # Modified
         scopes=creds_data.scopes.split(',')
     )
 
-    # Si el token de acceso ha expirado, lo refrescamos
-    if credentials.expired and credentials.refresh_token:
-        # Construimos la configuración del cliente para refrescar el token
-        client_config = {
-            "web": {
-                "client_id": client_id,
-                "client_secret": client_secret,
-                "token_uri": credentials.token_uri,
-            }
-        }
-        # Creamos un flujo temporal para refrescar
-        flow = Flow.from_client_config(
-            client_config,
-            scopes=credentials.scopes,
-            redirect_uri='urn:ietf:wg:oauth:2.0:oob' # Este URI no se usa para refrescar, pero es requerido
-        )
-        flow.oauth2session.token = {
-            'access_token': credentials.token,
-            'refresh_token': credentials.refresh_token,
-            'token_uri': credentials.token_uri,
-            'client_id': client_id,
-            'client_secret': client_secret,
-            'scopes': credentials.scopes
-        }
-        flow.oauth2session.refresh_token(credentials.token_uri)
-        credentials = flow.credentials
-        
-        # Actualizamos las credenciales en la base de datos
-        creds_data.token = credentials.token
-        creds_data.refresh_token = credentials.refresh_token
-        db.session.add(creds_data)
-        db.session.commit()
-
+    # The google-auth library handles token refresh automatically if refresh_token is present
+    # No need for manual refresh logic here.
 
     return build('calendar', 'v3', credentials=credentials)
 
