@@ -5,6 +5,7 @@ import datetime
 import pytz
 from marshmallow import ValidationError # Added
 from app.schemas import AppointmentSchema # Added
+import logging # Added
 
 bp = Blueprint('calendar_api', __name__)
 
@@ -37,6 +38,7 @@ def book_appointment():
     try:
         validated_data = schema.load(request.get_json()) # Added validation
     except ValidationError as err: # Added
+        current_app.logger.error(f"Validation error in book_appointment: {err.messages}") # Added logging
         return jsonify({"errors": err.messages}), 400 # Added
 
     summary = validated_data['summary'] # Modified
@@ -52,18 +54,25 @@ def book_appointment():
         timezone = pytz.timezone(current_user.timezone) # Modified
         start_time = start_time_str.astimezone(timezone) # Modified (Marshmallow already converted to datetime)
         end_time = end_time_str.astimezone(timezone) # Modified (Marshmallow already converted to datetime)
-    except ValueError:
+    except ValueError as e: # Added specific exception
+        current_app.logger.error(f"Timezone conversion error in book_appointment: {e}") # Added logging
         return jsonify({"error": "Formato de fecha/hora inválido. Use ISO 8601."}), 400
 
     service = gcalendar_service.build_gcal_service(user_id=current_user.id)
     if not service:
+        current_app.logger.warning(f"No Google Calendar service for user {current_user.id}") # Added logging
         return jsonify({"error": "No se encontraron credenciales para el doctor."}), 404
 
-    event_link = gcalendar_service.create_calendar_event(
-        service, calendar_id, summary, description, start_time, end_time, attendees
-    )
-
-    if event_link:
-        return jsonify({"message": "Cita agendada con éxito.", "link": event_link}), 201
-    else:
-        return jsonify({"error": "No se pudo agendar la cita."}), 500
+    try: # Added try-except for calendar event creation
+        event_link = gcalendar_service.create_calendar_event(
+            service, calendar_id, summary, description, start_time, end_time, attendees
+        )
+        if event_link:
+            current_app.logger.info(f"Event created successfully for user {current_user.id}: {event_link}") # Added logging
+            return jsonify({"message": "Cita agendada con éxito.", "link": event_link}), 201
+        else:
+            current_app.logger.error(f"Failed to create calendar event for user {current_user.id}. Check gcalendar_service logs.") # Added logging
+            return jsonify({"error": "No se pudo agendar la cita."}), 500
+    except Exception as e: # Catch any other unexpected errors during event creation
+        current_app.logger.exception(f"Unexpected error during calendar event creation for user {current_user.id}") # Added logging
+        return jsonify({"error": "Error interno al agendar la cita."}), 500

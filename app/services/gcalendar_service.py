@@ -5,6 +5,8 @@ import datetime
 import pytz
 from flask import current_app # Importamos current_app
 from app import db # Already imported, just confirming its presence
+import logging # Added
+from googleapiclient.errors import HttpError # Added
 
 def build_gcal_service(user_id): # Modified
     creds_data = Credencial.query.filter_by(user_id=user_id).first() # Modified
@@ -105,6 +107,9 @@ def create_calendar_event(service, calendar_id, summary, description, start_time
     try:
         event = service.events().insert(calendarId=calendar_id, body=event).execute()
         return event.get('htmlLink')
-    except Exception as e:
-        print(f"Error creating event: {e}")
+    except HttpError as e: # Modified
+        logging.error(f"Error de la API de Google al crear evento: {e.resp.status} - {e.content.decode()}", exc_info=True) # Modified
+        return None
+    except Exception as e: # Modified
+        logging.exception(f"Error inesperado al crear evento: {e}") # Modified
         return None
