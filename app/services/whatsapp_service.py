@@ -1,0 +1,1 @@
+# Lógica para interactuar con WhatsApp (aún por implementar)

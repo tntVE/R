@@ -1,0 +1,25 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+
+# Database files
+*.db
+
+# Environment variables
+.env
+
+# Google API credentials
+client_secret.json
+
+# Temporary test files
+test_app.py
+
+# IDE-specific files
+.vscode/
+.idea/
+
+# Operating System files
+.DS_Store
+thumbs.db
