@@ -179,3 +179,70 @@ def test_create_calendar_event(mock_build_service, app, new_user):
 
         assert event_link == 'http://mocklink.com'
         mock_service.events().insert().execute.assert_called_once()
+
+# --- Integration Tests for Auth Routes ---
+
+def test_register_user(client, app):
+    with app.app_context():
+        response = client.post('/auth/register', data={
+            'email': 'newuser@example.com',
+            'password': 'newpassword',
+            'role': 'doctor', # Default role
+            'timezone': 'America/Santiago' # Default timezone
+        })
+        assert response.status_code == 200 # Should redirect or show success message
+        assert b'Registro exitoso' in response.data # Check for flash message
+
+        user = User.query.filter_by(email='newuser@example.com').first()
+        assert user is not None
+        assert user.check_password('newpassword')
+
+def test_register_existing_user(client, app, new_user):
+    with app.app_context():
+        response = client.post('/auth/register', data={
+            'email': new_user.email,
+            'password': 'anotherpassword'
+        })
+        assert response.status_code == 200
+        assert b'Ese email ya est' in response.data # Check for flash message
+
+def test_login_user(client, app, new_user):
+    with app.app_context():
+        response = client.post('/auth/login', data={
+            'email': new_user.email,
+            'password': 'password'
+        })
+        assert response.status_code == 302 # Should redirect on successful login
+        assert response.headers['Location'] == '/main/index' # Assuming this redirect
+
+def test_login_invalid_credentials(client, app, new_user):
+    with app.app_context():
+        response = client.post('/auth/login', data={
+            'email': new_user.email,
+            'password': 'wrongpassword'
+        })
+        assert response.status_code == 200 # Should render login page with error
+        assert b'Email o contrase' in response.data # Check for flash message
+
+def test_logout_user(client, app, new_user):
+    with app.app_context():
+        # First, log in the user
+        client.post('/auth/login', data={
+            'email': new_user.email,
+            'password': 'password'
+        })
+        
+        # Then, log out
+        response = client.get('/auth/logout')
+        assert response.status_code == 302 # Should redirect
+        assert response.headers['Location'] == '/auth/login'
+
+# --- Integration Tests for Protected API Endpoints ---
+
+def test_list_calendars_requires_login(client):
+    response = client.get('/auth/list_calendars')
+    assert response.status_code == 302 # Redirect to login
+
+def test_book_appointment_requires_login(client):
+    response = client.post('/auth/book_appointment', json={})
+    assert response.status_code == 302 # Redirect to login
