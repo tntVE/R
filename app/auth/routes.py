@@ -11,10 +11,8 @@ import datetime
 import pytz
 from flask_login import login_user, logout_user, current_user, login_required # Added
 
-# <-- ¡Añadido!
-@login_required
-def authorize():
-    # Construimos la configuración del cliente directamente desde las variables de entorno
+# Helper function to build Google Flow
+def _build_google_flow(state=None):
     client_config = {
         "web": {
             "client_id": current_app.config['GOOGLE_CLIENT_ID'],
@@ -25,11 +23,17 @@ def authorize():
             "redirect_uris": [url_for('auth.callback', _external=True)]
         }
     }
+    scopes = ['https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/calendar.readonly']
+    
+    if state:
+        return Flow.from_client_config(client_config, scopes=scopes, state=state, redirect_uri=url_for('auth.callback', _external=True))
+    else:
+        return Flow.from_client_config(client_config, scopes=scopes, redirect_uri=url_for('auth.callback', _external=True))
 
-    flow = Flow.from_client_config(
-        client_config,
-        scopes=['https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/calendar.readonly'],
-        redirect_uri=url_for('auth.callback', _external=True))
+# <-- ¡Añadido!
+@login_required
+def authorize():
+    flow = _build_google_flow() # Modified
 
     authorization_url, state = flow.authorization_url(
         access_type='offline',
@@ -43,23 +47,7 @@ def authorize():
 def callback():
     state = session['state']
     
-    # Construimos la configuración del cliente directamente desde las variables de entorno
-    client_config = {
-        "web": {
-            "client_id": current_app.config['GOOGLE_CLIENT_ID'],
-            "client_secret": current_app.config['GOOGLE_CLIENT_SECRET'],
-            "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-            "token_uri": "https://oauth2.googleapis.com/token",
-            "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-            "redirect_uris": [url_for('auth.callback', _external=True)]
-        }
-    }
-
-    flow = Flow.from_client_config(
-        client_config,
-        scopes=['https://www.googleapis.com/auth/calendar.events', 'https://www.googleapis.com/auth/calendar.readonly'],
-        state=state,
-        redirect_uri=url_for('auth.callback', _external=True))
+    flow = _build_google_flow(state=state) # Modified
 
     authorization_response = request.url
     flow.fetch_token(authorization_response=authorization_response)
@@ -87,7 +75,6 @@ def callback():
     db.session.commit()
 
     return "<h1>¡AUTORIZACIÓN FINAL COMPLETADA CON ÉXITO!</h1><p>La base de datos ahora tiene los tokens de acceso.</p>"
-
 
 
 # New: Registration Route
