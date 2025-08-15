@@ -48,7 +48,7 @@ def book_appointment():
     try:
         # Convertir strings a objetos datetime con zona horaria
         # Asumimos que los strings vienen en formato ISO 8601 y en la zona horaria de Santiago
-        timezone = pytz.timezone('America/Santiago')
+        timezone = pytz.timezone(current_user.timezone) # Modified
         start_time = datetime.datetime.fromisoformat(start_time_str).astimezone(timezone)
         end_time = datetime.datetime.fromisoformat(end_time_str).astimezone(timezone)
     except ValueError:
