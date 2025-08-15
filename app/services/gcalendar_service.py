@@ -4,9 +4,10 @@ from app.models.credencial import Credencial
 import datetime
 import pytz
 from flask import current_app # Importamos current_app
+from app import db # Already imported, just confirming its presence
 
-def build_gcal_service(doctor_name="Dr. Ejemplo"):
-    creds_data = Credencial.query.filter_by(nombre_doctor=doctor_name).first()
+def build_gcal_service(user_id): # Modified
+    creds_data = Credencial.query.filter_by(user_id=user_id).first() # Modified
     if not creds_data:
         return None
     
